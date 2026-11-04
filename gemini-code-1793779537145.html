@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мережі АЗС України</title>
+  
+  <!-- Підключення стилів карт Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { display: flex; flex-direction: column; height: 100vh; background-color: #f4f6f8; }
+    
+    header { background: #fff; padding: 15px 20px; border-bottom: 1px solid #e0e0e0; }
+    header h1 { font-size: 20px; color: #2c3e50; margin-bottom: 10px; }
+    
+    .filters { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-btn { padding: 6px 14px; border: 1px solid #dcdfe6; border-radius: 20px; background: #fff; cursor: pointer; font-weight: 500; transition: 0.2s; }
+    .filter-btn:hover { background: #f0f2f5; }
+    .filter-btn.active { background: #007bff; color: #fff; border-color: #007bff; }
+    
+    .main-container { display: flex; flex: 1; overflow: hidden; }
+    #map { flex: 2; height: 100%; }
+    
+    .sidebar { flex: 1; min-width: 280px; max-width: 380px; background: #fff; padding: 20px; border-left: 1px solid #e0e0e0; overflow-y: auto; }
+    .stat-card { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #007bff; }
+    .stat-card h3 { font-size: 24px; color: #111; margin-bottom: 5px; }
+    .stat-card p { font-size: 14px; color: #666; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Мережі АЗС України (2020–2026)</h1>
+    <div class="filters">
+      <button class="filter-btn active" onclick="filterData('all', this)">Усі мережі</button>
+      <button class="filter-btn" onclick="filterData('ОККО', this)">ОККО</button>
+      <button class="filter-btn" onclick="filterData('WOG', this)">WOG</button>
+      <button class="filter-btn" onclick="filterData('Укрнафта', this)">Укрнафта</button>
+      <button class="filter-btn" onclick="filterData('UPG', this)">UPG</button>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <div id="map"></div>
+    
+    <div class="sidebar">
+      <h2>2026 рік</h2>
+      <div class="stat-card">
+        <h3>≈ 5 393 АЗС</h3>
+        <p>Загальна кількість заправок в Україні</p>
+      </div>
+      <div class="stat-card" style="border-left-color: #28a745;">
+        <h3>Інформація</h3>
+        <p id="info-text">Натисніть на маркер на карті, щоб переглянути деталі про АЗС.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Підключення скрипту карт Leaflet -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // Створення карти з центром в Україні
+    const map = L.map('map').setView([48.3794, 31.1656], 6);
+
+    // Додавання шару карти OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Тестові дані АЗС
+    const stations = [
+      { name: "ОККО", lat: 50.4501, lng: 30.5234, city: "Київ" },
+      { name: "WOG", lat: 49.8383, lng: 24.0232, city: "Львів" },
+      { name: "Укрнафта", lat: 46.4825, lng: 30.7233, city: "Одеса" },
+      { name: "UPG", lat: 49.9935, lng: 36.2304, city: "Харків" },
+      { name: "ОККО", lat: 48.4647, lng: 35.0462, city: "Дніпро" },
+      { name: "WOG", lat: 49.2331, lng: 28.4682, city: "Вінниця" }
+    ];
+
+    let markers = [];
+
+    // Функція відображення маркерів
+    function renderMarkers(filter = 'all') {
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+
+      stations.forEach(s => {
+        if (filter === 'all' || s.name === filter) {
+          const marker = L.marker([s.lat, s.lng]).addTo(map);
+          marker.bindPopup(`<b>${s.name}</b><br>Місто: ${s.city}`);
+          
+          marker.on('click', () => {
+            document.getElementById('info-text').innerText = `Вибрано АЗС ${s.name} у місті ${s.city}.`;
+          });
+
+          markers.push(marker);
+        }
+      });
+    }
+
+    // Функція фільтрації за кнопками
+    function filterData(brand, btnElement) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btnElement.classList.add('active');
+      renderMarkers(brand);
+    }
+
+    // Початкове завантаження всіх маркерів
+    renderMarkers();
+  </script>
+
+</body>
+</html>
